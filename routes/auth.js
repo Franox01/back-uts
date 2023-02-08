@@ -11,7 +11,13 @@ const schemaRegister = Joi.object({
     password: Joi.string().min(6).required()
 })
 
-
+const schemaActualizar = Joi.object({
+    id: Joi.string().max(1024).required(),  
+    name: Joi.string().min(6).max(255).required(),
+    lastname: Joi.string().max(255).required(),
+    email: Joi.string().max(1024).required(),
+    password: Joi.string().min(6).required()
+})
 
 const schemaLogin = Joi.object({
     email: Joi.string().max(1024).required(),
@@ -130,9 +136,9 @@ router.get('/eraseuser',async (req, res)=>{
 /////
 
 
-router.post('/actualizar', async (req, res) => {
+router.post('/actualizarusuario', async (req, res) => {
 //validacion de usuario
-const{error} = schemaRegister.validate(req.body)
+const{error} = schemaActualizar.validate(req.body)
 if(error){
    return res.status(400).json({
      error:error.details[0].message
@@ -142,32 +148,34 @@ if(error){
 const isEmailUnique = await User.findOne({email: req.body.email})
 if(isEmailUnique){
     return res.status(400).json({
-        error:"ya existe"
+        error:"ya existe, no podemos actualizar el usuario "
     })
 }
     const salt = await bcrypt.genSalt(10)
     const passwordEncryptado = await bcrypt.hash(req.body.password, salt)
 
 
-    const usuario = new User({
+    const usuario = {
         name: req.body.name,
         lastname: req.body.lastname,
         email: req.body.email,
         password: passwordEncryptado,
-    })
+    }
     try {
-        const guardado = await usuario.save()
+        const actualizado = await User.findByIdAndUpdate(req.body.id, usuario,{new: true})
         res.json({
-            message: 'accedio',
-            data: guardado
+            message: 'actualizado',
+            data: actualizado
         })
     } catch (error) {
         res.status(400).json({
-            message: 'error al guardar',
+            message: 'error al actualizar',
             error
         })
     }
 })
+    
+///
 
 
 
